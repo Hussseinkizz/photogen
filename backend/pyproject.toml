@@ -5,7 +5,8 @@ description = "Local photo editor"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.115",
-    "openrouter>=1.0",
+    "google-genai>=2.23.0",
+    "openai>=1.0",
     "poethepoet>=0.32",
     "python-dotenv>=1.0",
     "python-multipart>=0.0.18",

@@ -7,7 +7,7 @@ from typing import Any, cast
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
-from app.ai.env import AIError, openrouter_client, openrouter_model_name
+from app.ai.env import AIError, chat_client, chat_model_name
 from app.ai.helpers import (
     chat_message_text,
     chat_tool_call_id,
@@ -49,17 +49,16 @@ def read_profile_via_tool(db: Session, profile_id: int) -> Profile:
     tries = 0
     rounds = 0
     called_tool = False
-    with openrouter_client() as client:
+    with chat_client() as client:
         while tries < PROFILE_READ_ATTEMPTS:
             rounds += 1
             if rounds > 8:
                 raise AIError("Profile tool loop ran too long")
-            result = client.chat.send(
+            result = client.chat.completions.create(
+                model=chat_model_name(),
                 messages=cast(Any, messages),
-                model=openrouter_model_name(),
                 tools=cast(Any, MODEL_TOOLS),
-                stream=False,
-                timeout_ms=120_000,
+                timeout=120,
             )
             message = result.choices[0].message
             calls = chat_tool_calls(message)

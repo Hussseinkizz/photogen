@@ -3,12 +3,10 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from openrouter.types import UNSET
-
 
 def chat_tool_calls(message: Any) -> list[Any]:
     calls = getattr(message, "tool_calls", None)
-    if calls is UNSET or calls is None:
+    if not calls:
         return []
     return list(calls)
 
@@ -60,7 +58,7 @@ def sdk_to_dict(value: Any) -> dict[str, Any]:
 
 def chat_message_text(message: Any) -> str:
     content = getattr(message, "content", None)
-    if content is UNSET or content is None:
+    if content is None:
         return ""
     if isinstance(content, str):
         return content.strip()

@@ -62,9 +62,9 @@ Both running. Vite proxies `/api`, `/uploads`, `/generated`. Cookie + CORS. Regi
 
 ## Tech stack and prerequisites
 
-Python 3.11+, Node, uv, OpenRouter key.
+Python 3.11+, Node, uv, Gemini API key (free tier at Google AI Studio).
 
-FastAPI, Pydantic, SQLAlchemy, SQLite, OpenRouter Python SDK, poethepoet.
+FastAPI, Pydantic, SQLAlchemy, SQLite, Google GenAI SDK for image edits, OpenAI Python SDK (pointed at Gemini's OpenAI-compatible endpoint) for the profile tool loop, poethepoet.
 
 Vite, React, TypeScript, Tailwind, shadcn/ui, TanStack Query.
 
@@ -83,8 +83,8 @@ Vite, React, TypeScript, Tailwind, shadcn/ui, TanStack Query.
 - [uv](https://docs.astral.sh/uv/)
 - [FastAPI](https://fastapi.tiangolo.com/)
 - [Pydantic](https://docs.pydantic.dev/)
-- [OpenRouter Python SDK](https://github.com/OpenRouterTeam/python-sdk)
-- [OpenRouter image API](https://openrouter.ai/docs/guides/overview/multimodal/image-generation)
+- [Google GenAI Python SDK](https://github.com/googleapis/python-genai)
+- [Gemini image generation](https://ai.google.dev/gemini-api/docs/image-generation)
 - [OpenRouter tool calling](https://openrouter.ai/docs/guides/features/tool-calling)
 - [Vite](https://vite.dev/)
 - [shadcn/ui](https://ui.shadcn.com/)

@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import os
 
-from openrouter import OpenRouter
+from google import genai
+from openai import OpenAI
+
+GOOGLE_OPENAI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
 
 
 class AIError(Exception):
@@ -20,12 +23,25 @@ def require_env_setting(name: str) -> str:
     return value
 
 
-def openrouter_model_name() -> str:
-    return require_env_setting("MODEL_NAME")
+def gemini_api_key() -> str:
+    return require_env_setting("GEMINI_API_KEY")
 
 
-def openrouter_client() -> OpenRouter:
-    url = read_env("MODEL_URL")
-    if url:
-        return OpenRouter(api_key=require_env_setting("MODEL_KEY"), server_url=url)
-    return OpenRouter(api_key=require_env_setting("MODEL_KEY"))
+def chat_model_name() -> str:
+    return read_env("CHAT_MODEL_NAME") or "gemini-2.5-flash"
+
+
+def image_model_name() -> str:
+    return read_env("IMAGE_MODEL_NAME") or "gemini-3.1-flash-image"
+
+
+def chat_client() -> OpenAI:
+    # Profile tool loop runs on the OpenAI-compatible Gemini endpoint.
+    return OpenAI(
+        api_key=gemini_api_key(),
+        base_url=read_env("MODEL_URL") or GOOGLE_OPENAI_BASE_URL,
+    )
+
+
+def image_client() -> genai.Client:
+    return genai.Client(api_key=gemini_api_key())
