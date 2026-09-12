@@ -10,6 +10,6 @@
   "extraPaths": ["backend"],
   "venvPath": "backend",
   "venv": ".venv",
-  "pythonVersion": "3.12",
+  "pythonVersion": "3.11",
   "typeCheckingMode": "standard"
 }
