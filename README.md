@@ -46,24 +46,6 @@ uv sync
 uv run poe dev
 ```
 
-```bash
-curl -s -c cookies.txt -b cookies.txt -H 'Content-Type: application/json' \
-  -X POST http://127.0.0.1:8000/api/auth/register \
-  -d '{"username":"ada","password":"secret1","favorite_colors":["amber","copper"],"hobbies":"photography","notes":"keep it warm"}'
-
-curl -s -c cookies.txt -b cookies.txt -H 'Content-Type: application/json' \
-  -X POST http://127.0.0.1:8000/api/auth/login \
-  -d '{"username":"ada","password":"secret1"}'
-
-curl -s -c cookies.txt -b cookies.txt http://127.0.0.1:8000/api/profile
-
-curl -s -c cookies.txt -b cookies.txt \
-  -F 'prompt=make it a film still' -F 'image=@./your-photo.jpg' \
-  http://127.0.0.1:8000/api/photos
-
-curl -s -c cookies.txt -b cookies.txt http://127.0.0.1:8000/api/photos
-```
-
 **Phase 2 — Frontend**
 
 ```bash
