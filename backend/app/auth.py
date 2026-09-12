@@ -9,10 +9,10 @@ from fastapi import Cookie, Depends, HTTPException, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.db import db_session
-from app.models import LoginSession, User
+from app.db import get_db
+from app.models import User, UserSession
 
-COOKIE_NAME = "session"
+SESSION_COOKIE_NAME = "session"
 SESSION_DAYS = 7
 PASSWORD_HASH_ROUNDS = 100_000
 
@@ -36,10 +36,10 @@ def verify_password(password: str, stored: str) -> bool:
     return hmac.compare_digest(check.hex(), digest)
 
 
-def create_login(db: Session, user_id: int) -> str:
+def create_user_session(db: Session, user_id: int) -> str:
     token = secrets.token_urlsafe(32)
     db.add(
-        LoginSession(
+        UserSession(
             token=token,
             user_id=user_id,
             expires_at=datetime.now(timezone.utc) + timedelta(days=SESSION_DAYS),
@@ -51,7 +51,7 @@ def create_login(db: Session, user_id: int) -> str:
 
 def set_session_cookie(response: Response, token: str) -> None:
     response.set_cookie(
-        key=COOKIE_NAME,
+        key=SESSION_COOKIE_NAME,
         value=token,
         httponly=True,
         samesite="lax",
@@ -62,39 +62,39 @@ def set_session_cookie(response: Response, token: str) -> None:
 
 
 def clear_session_cookie(response: Response) -> None:
-    response.delete_cookie(key=COOKIE_NAME, path="/")
+    response.delete_cookie(key=SESSION_COOKIE_NAME, path="/")
 
 
-def user_from_cookie(db: Session, token: str) -> User | None:
-    login = db.scalars(select(LoginSession).where(LoginSession.token == token)).first()
-    if login is None:
+def find_user_by_session_token(db: Session, token: str) -> User | None:
+    session = db.scalars(select(UserSession).where(UserSession.token == token)).first()
+    if session is None:
         return None
-    expires = login.expires_at
+    expires = session.expires_at
     if expires.tzinfo is None:
         expires = expires.replace(tzinfo=timezone.utc)
     if expires < datetime.now(timezone.utc):
-        db.delete(login)
+        db.delete(session)
         db.commit()
         return None
-    return db.get(User, login.user_id)
+    return db.get(User, session.user_id)
 
 
-def delete_login(db: Session, token: str | None) -> None:
+def delete_user_session(db: Session, token: str | None) -> None:
     if not token:
         return
-    login = db.scalars(select(LoginSession).where(LoginSession.token == token)).first()
-    if login is not None:
-        db.delete(login)
+    session = db.scalars(select(UserSession).where(UserSession.token == token)).first()
+    if session is not None:
+        db.delete(session)
         db.commit()
 
 
 def current_user(
-    session_cookie: str | None = Cookie(default=None, alias=COOKIE_NAME),
-    db: Session = Depends(db_session),
+    session_cookie: str | None = Cookie(default=None, alias=SESSION_COOKIE_NAME),
+    db: Session = Depends(get_db),
 ) -> User:
     if not session_cookie:
         raise HTTPException(status_code=401, detail="Not signed in")
-    user = user_from_cookie(db, session_cookie)
+    user = find_user_by_session_token(db, session_cookie)
     if user is None:
         raise HTTPException(status_code=401, detail="Not signed in")
     return user

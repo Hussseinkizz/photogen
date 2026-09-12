@@ -22,11 +22,11 @@ SessionFactory = sessionmaker(
 )
 
 
-class Table(DeclarativeBase):
+class Base(DeclarativeBase):
     pass
 
 
-def db_session() -> Iterator[Session]:
+def get_db() -> Iterator[Session]:
     db = SessionFactory()
     try:
         yield db
@@ -36,4 +36,4 @@ def db_session() -> Iterator[Session]:
 
 def init_db() -> None:
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    Table.metadata.create_all(engine)
+    Base.metadata.create_all(engine)

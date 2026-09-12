@@ -40,7 +40,7 @@ class Profile(BaseModel):
     notes: str
 
 
-class GeneratedVersion(BaseModel):
+class PhotoEdit(BaseModel):
     url: str
     prompt: str
 
@@ -48,6 +48,6 @@ class GeneratedVersion(BaseModel):
 class PhotoResponse(BaseModel):
     id: int
     original_url: str
-    generated: list[GeneratedVersion]
+    generated: list[PhotoEdit]
     parent_id: int | None
     created_at: str

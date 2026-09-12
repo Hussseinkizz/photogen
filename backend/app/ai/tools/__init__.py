@@ -7,34 +7,40 @@ from typing import Any, cast
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
-from app.ai.env import AIError, chat_client, chat_model_name
-from app.ai.helpers import as_dict, message_text, tool_call_id, tool_calls_on, tool_name
+from app.ai.env import AIError, openrouter_client, openrouter_model_name
+from app.ai.helpers import (
+    chat_message_text,
+    chat_tool_call_id,
+    chat_tool_calls,
+    chat_tool_name,
+    sdk_to_dict,
+)
 from app.ai.tools.get_profile import (
-    GET_PROFILE_TOOL,
-    SYSTEM_PROMPT,
-    profile_from_text,
-    run_get_profile_tool,
+    PROFILE_LOOKUP_TOOL_DEF,
+    PROFILE_TOOL_SYSTEM_PROMPT,
+    execute_profile_lookup_tool,
+    parse_profile_from_text,
 )
 from app.schemas import Profile
 
 log = logging.getLogger("photogen.ai")
 
-PROFILE_TRIES = 3
+PROFILE_READ_ATTEMPTS = 3
 
-TOOLS = [GET_PROFILE_TOOL]
+MODEL_TOOLS = [PROFILE_LOOKUP_TOOL_DEF]
 
 
-def run_tool(db: Session, call: Any) -> dict[str, Any]:
-    name = tool_name(call)
+def dispatch_model_tool(db: Session, call: Any) -> dict[str, Any]:
+    name = chat_tool_name(call)
     if name == "get_profile":
-        return run_get_profile_tool(db, call)
+        return execute_profile_lookup_tool(db, call)
     raise AIError(f"Unknown tool: {name}")
 
 
-def fetch_profile_from_model(db: Session, profile_id: int) -> Profile:
+def read_profile_via_tool(db: Session, profile_id: int) -> Profile:
     """Tool call get_profile(profile_id), then validate the model's JSON as Profile. 3 tries."""
     messages: list[Any] = [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": PROFILE_TOOL_SYSTEM_PROMPT},
         {
             "role": "user",
             "content": f"The profile id is {profile_id}. Fetch it and return the profile JSON.",
@@ -43,34 +49,34 @@ def fetch_profile_from_model(db: Session, profile_id: int) -> Profile:
     tries = 0
     rounds = 0
     called_tool = False
-    with chat_client() as client:
-        while tries < PROFILE_TRIES:
+    with openrouter_client() as client:
+        while tries < PROFILE_READ_ATTEMPTS:
             rounds += 1
             if rounds > 8:
                 raise AIError("Profile tool loop ran too long")
             result = client.chat.send(
                 messages=cast(Any, messages),
-                model=chat_model_name(),
-                tools=cast(Any, TOOLS),
+                model=openrouter_model_name(),
+                tools=cast(Any, MODEL_TOOLS),
                 stream=False,
                 timeout_ms=120_000,
             )
             message = result.choices[0].message
-            calls = tool_calls_on(message)
+            calls = chat_tool_calls(message)
             if calls:
-                messages.append(as_dict(message))
+                messages.append(sdk_to_dict(message))
                 for call in calls:
                     messages.append(
                         {
                             "role": "tool",
-                            "tool_call_id": tool_call_id(call),
-                            "content": json.dumps(run_tool(db, call)),
+                            "tool_call_id": chat_tool_call_id(call),
+                            "content": json.dumps(dispatch_model_tool(db, call)),
                         }
                     )
                     called_tool = True
                 continue
             if not called_tool:
-                messages.append(as_dict(message))
+                messages.append(sdk_to_dict(message))
                 messages.append(
                     {
                         "role": "user",
@@ -80,11 +86,11 @@ def fetch_profile_from_model(db: Session, profile_id: int) -> Profile:
                 tries += 1
                 continue
             try:
-                profile = profile_from_text(message_text(message))
+                profile = parse_profile_from_text(chat_message_text(message))
             except (ValueError, ValidationError, json.JSONDecodeError) as exc:
                 tries += 1
                 log.info("profile JSON failed try %s: %s", tries, exc)
-                messages.append(as_dict(message))
+                messages.append(sdk_to_dict(message))
                 messages.append(
                     {
                         "role": "user",

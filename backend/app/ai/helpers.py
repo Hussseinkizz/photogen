@@ -6,14 +6,14 @@ from typing import Any
 from openrouter.types import UNSET
 
 
-def tool_calls_on(message: Any) -> list[Any]:
+def chat_tool_calls(message: Any) -> list[Any]:
     calls = getattr(message, "tool_calls", None)
     if calls is UNSET or calls is None:
         return []
     return list(calls)
 
 
-def tool_name(call: Any) -> str:
+def chat_tool_name(call: Any) -> str:
     if isinstance(call, dict):
         fn = call.get("function") or {}
         return str(fn.get("name") or call.get("name") or "")
@@ -23,13 +23,13 @@ def tool_name(call: Any) -> str:
     return str(getattr(call, "name", "") or "")
 
 
-def tool_call_id(call: Any) -> str:
+def chat_tool_call_id(call: Any) -> str:
     if isinstance(call, dict):
         return str(call.get("id") or "")
     return str(getattr(call, "id", "") or "")
 
 
-def tool_arguments(call: Any) -> dict[str, Any]:
+def chat_tool_arguments(call: Any) -> dict[str, Any]:
     if isinstance(call, dict):
         fn = call.get("function") or {}
         raw = fn.get("arguments") or call.get("arguments") or {}
@@ -46,7 +46,7 @@ def tool_arguments(call: Any) -> dict[str, Any]:
     return parsed
 
 
-def as_dict(value: Any) -> dict[str, Any]:
+def sdk_to_dict(value: Any) -> dict[str, Any]:
     """Turn an SDK object into a plain dict."""
     if isinstance(value, dict):
         return value
@@ -58,7 +58,7 @@ def as_dict(value: Any) -> dict[str, Any]:
     return {}
 
 
-def message_text(message: Any) -> str:
+def chat_message_text(message: Any) -> str:
     content = getattr(message, "content", None)
     if content is UNSET or content is None:
         return ""
@@ -77,7 +77,7 @@ def message_text(message: Any) -> str:
     return str(content or "").strip()
 
 
-def json_object_from_text(text: str) -> dict[str, Any]:
+def parse_json_object_from_text(text: str) -> dict[str, Any]:
     cleaned = text.strip()
     if cleaned.startswith("```"):
         lines = cleaned.split("\n")[1:]

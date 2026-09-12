@@ -6,7 +6,7 @@ from app.models import User
 from app.schemas import Profile
 
 
-def get_profile(db: Session, user_id: int) -> Profile | None:
+def load_user_profile(db: Session, user_id: int) -> Profile | None:
     user = db.get(User, user_id)
     if user is None:
         return None

@@ -5,13 +5,14 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.ai.helpers import json_object_from_text, tool_arguments
-from app.profile import get_profile
+from app.ai.helpers import chat_tool_arguments, parse_json_object_from_text
+from app.profile import load_user_profile
 from app.schemas import Profile
 
 log = logging.getLogger("photogen.ai")
 
-GET_PROFILE_TOOL = {
+# NOTE: the nested "name" is the wire contract with the model — keep "get_profile".
+PROFILE_LOOKUP_TOOL_DEF = {
     "type": "function",
     "function": {
         "name": "get_profile",
@@ -29,7 +30,7 @@ GET_PROFILE_TOOL = {
     },
 }
 
-SYSTEM_PROMPT = (
+PROFILE_TOOL_SYSTEM_PROMPT = (
     "Call get_profile with the profile_id from the user message. "
     "Then reply with JSON only, no markdown, matching this shape: "
     '{"id": 1, "username": "name", "favorite_colors": ["color"], "hobbies": "text", "notes": "text"}. '
@@ -37,12 +38,12 @@ SYSTEM_PROMPT = (
 )
 
 
-def profile_from_text(text: str) -> Profile:
-    return Profile(**json_object_from_text(text))
+def parse_profile_from_text(text: str) -> Profile:
+    return Profile(**parse_json_object_from_text(text))
 
 
-def run_get_profile_tool(db: Session, call: Any) -> dict[str, Any]:
-    args = tool_arguments(call)
+def execute_profile_lookup_tool(db: Session, call: Any) -> dict[str, Any]:
+    args = chat_tool_arguments(call)
     raw_id = args.get("profile_id")
     if raw_id is None:
         return {"error": "profile_id must be an integer"}
@@ -51,7 +52,7 @@ def run_get_profile_tool(db: Session, call: Any) -> dict[str, Any]:
     except (TypeError, ValueError):
         return {"error": "profile_id must be an integer"}
     log.info("tool call: get_profile profile_id=%s", profile_id)
-    profile = get_profile(db, profile_id)
+    profile = load_user_profile(db, profile_id)
     if profile is None:
         return {"error": "profile not found"}
     return {

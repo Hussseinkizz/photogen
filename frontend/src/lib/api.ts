@@ -16,7 +16,7 @@ export type Profile = {
   notes: string
 }
 
-export type GeneratedVersion = {
+export type PhotoEdit = {
   url: string
   prompt: string
 }
@@ -24,7 +24,7 @@ export type GeneratedVersion = {
 export type Photo = {
   id: number
   original_url: string
-  generated: GeneratedVersion[]
+  generated: PhotoEdit[]
   parent_id: number | null
   created_at: string
 }

@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.db import ROOT, init_db
 from app.routes import router
-from app.storage import GENERATED_DIR, UPLOAD_DIR, ensure_folders
+from app.storage import EDITS_DIR, ORIGINALS_DIR, ensure_image_folders
 
 load_dotenv()
 
@@ -22,7 +22,7 @@ logging.basicConfig(
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    ensure_folders()
+    ensure_image_folders()
     init_db()
     yield
 
@@ -35,10 +35,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-ensure_folders()
+ensure_image_folders()
 app.include_router(router)
-app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
-app.mount("/generated", StaticFiles(directory=GENERATED_DIR), name="generated")
+app.mount("/uploads", StaticFiles(directory=ORIGINALS_DIR), name="uploads")
+app.mount("/generated", StaticFiles(directory=EDITS_DIR), name="generated")
 
 
 @app.get("/health")

@@ -6,10 +6,10 @@ from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.types import JSON
 
-from app.db import Table
+from app.db import Base
 
 
-class User(Table):
+class User(Base):
     __tablename__: str = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -21,7 +21,7 @@ class User(Table):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
-class LoginSession(Table):
+class UserSession(Base):
     __tablename__: str = "sessions"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -30,12 +30,14 @@ class LoginSession(Table):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
-class Photo(Table):
+class Photo(Base):
     __tablename__: str = "photos"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     original_path: Mapped[str] = mapped_column(String(255))
-    generated: Mapped[list[dict[str, str]]] = mapped_column(JSON, default=list)
+    # DB column stays "generated" so existing sqlite files keep working;
+    # Python code uses `edits` to distinguish DB rows from rendered files.
+    edits: Mapped[list[dict[str, str]]] = mapped_column("generated", JSON, default=list)
     parent_id: Mapped[int | None] = mapped_column(ForeignKey("photos.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

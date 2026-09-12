@@ -3,18 +3,18 @@ from __future__ import annotations
 from pathlib import Path
 
 from app.models import Photo
-from app.storage import GENERATED_DIR, uploaded_path
+from app.storage import EDITS_DIR, original_file_path
 
 
-def latest_generated_path(photo: Photo) -> str | None:
-    versions = list(photo.generated or [])
-    if not versions:
+def latest_edit_filename(photo: Photo) -> str | None:
+    edits = list(photo.edits or [])
+    if not edits:
         return None
-    return versions[-1].get("path")
+    return edits[-1].get("path")
 
 
-def source_image_path(photo: Photo) -> Path:
-    latest = latest_generated_path(photo)
+def editable_source_path(photo: Photo) -> Path:
+    latest = latest_edit_filename(photo)
     if latest:
-        return GENERATED_DIR / latest
-    return uploaded_path(photo.original_path)
+        return EDITS_DIR / latest
+    return original_file_path(photo.original_path)

@@ -6,20 +6,20 @@ from pathlib import Path
 from sqlalchemy.orm import Session
 
 from app.ai.env import AIError as AIError
-from app.ai.image import generate_image
-from app.ai.tools import fetch_profile_from_model
+from app.ai.image import render_edited_image
+from app.ai.tools import read_profile_via_tool
 from app.schemas import Profile
 
 log = logging.getLogger("photogen.ai")
 
 
-def profile_as_text(profile: Profile) -> str:
+def describe_taste_for_prompt(profile: Profile) -> str:
     colors = ", ".join(profile.favorite_colors)
     return f"{profile.username}; favorite colors {colors}; hobbies {profile.hobbies}; {profile.notes}".strip()
 
 
-def edit_image(db: Session, user_id: int, image_path: Path, prompt: str) -> bytes:
-    profile = fetch_profile_from_model(db, user_id)
-    instruction = f"{prompt}. Match this taste: {profile_as_text(profile)}"
+def edit_photo_with_taste(db: Session, user_id: int, image_path: Path, prompt: str) -> bytes:
+    profile = read_profile_via_tool(db, user_id)
+    instruction = f"{prompt}. Match this taste: {describe_taste_for_prompt(profile)}"
     log.info("edit instruction ready (%s chars)", len(instruction))
-    return generate_image(image_path, instruction)
+    return render_edited_image(image_path, instruction)
