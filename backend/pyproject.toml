@@ -1,0 +1,40 @@
+[project]
+name = "photogen"
+version = "0.1.0"
+description = "Local photo editor"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "openrouter>=1.0",
+    "poethepoet>=0.32",
+    "python-dotenv>=1.0",
+    "python-multipart>=0.0.18",
+    "sqlalchemy>=2.0",
+    "uvicorn[standard]>=0.32",
+]
+
+[tool.uv]
+package = false
+
+[tool.pyright]
+pythonVersion = "3.12"
+venvPath = "."
+venv = ".venv"
+extraPaths = ["."]
+typeCheckingMode = "standard"
+
+[tool.basedpyright]
+pythonVersion = "3.12"
+venvPath = "."
+venv = ".venv"
+extraPaths = ["."]
+typeCheckingMode = "standard"
+
+
+[tool.poe.tasks.dev]
+cmd = "uvicorn app.main:app --reload --host 127.0.0.1 --port 8000"
+help = "Run the API with reload"
+
+[tool.poe.tasks.start]
+cmd = "uvicorn app.main:app --host 127.0.0.1 --port 8000"
+help = "Run the API without reload"

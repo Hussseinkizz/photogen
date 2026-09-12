@@ -1,0 +1,15 @@
+{
+  "include": ["backend/app"],
+  "exclude": [
+    "**/__pycache__",
+    "backend/.venv",
+    "backend/data",
+    "backend/uploads",
+    "backend/generated"
+  ],
+  "extraPaths": ["backend"],
+  "venvPath": "backend",
+  "venv": ".venv",
+  "pythonVersion": "3.12",
+  "typeCheckingMode": "standard"
+}
